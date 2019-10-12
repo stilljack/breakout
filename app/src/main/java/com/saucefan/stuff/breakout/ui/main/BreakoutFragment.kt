@@ -9,20 +9,21 @@ import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
 import com.saucefan.stuff.breakout.R
+import timber.log.Timber
 
 class BreakoutFragment : Fragment() {
 
     companion object {
         fun newInstance() = BreakoutFragment()
     }
-
-    private lateinit var viewModel: MainViewModel
+        lateinit var breakoutView:BreakoutView
+        private lateinit var viewModel: MainViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View  {
-        val breakoutView =BreakoutView(container!!.context)
+         breakoutView =BreakoutView(container!!.context)
         return breakoutView // inflater.inflate(R.layout.main_fragment, container, false)
     }
 
@@ -31,12 +32,9 @@ class BreakoutFragment : Fragment() {
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         // TODO: Use the ViewModel
     }
-
-
-
-    class BreakoutView(context: Context) : SurfaceView(context),Runnable{
-
-                  val gameThread = Thread()
+   inner class BreakoutView(context: Context) : SurfaceView(context),Runnable{
+                  val debug = Timber.asTree()
+                  var gameThread = Thread()
                   var mSurfaceHolder:SurfaceHolder =holder
         @Volatile var playing:Boolean =false
                   var paused = true
@@ -75,7 +73,7 @@ class BreakoutFragment : Fragment() {
 
             if (mSurfaceHolder.surface.isValid) {
                 //lock the canvas
-                canvas =mSurfaceHolder.lockCanvas()
+                canvas = mSurfaceHolder.lockCanvas()
 
                 canvas.drawColor(resources.getColor(R.color.colorBackground))
 
@@ -94,24 +92,56 @@ class BreakoutFragment : Fragment() {
                 mSurfaceHolder.unlockCanvasAndPost(canvas)
 
             }
+        }
 
             fun pause(){
                 playing=false
                 try {
                     gameThread.join()
                 } catch (e:InterruptedException) {
-                    Log.e("")
+                    debug.e(e, "crash at join in pause()")
+                }
+            }
+            fun resume() {
+                playing=true
+                gameThread =Thread(this)
+                gameThread.start()
+            }
+
+
+
+
+
+        override fun onTouchEvent(event: MotionEvent?): Boolean {
+
+            debug.i(event?.action.toString()) ?:0
+
+
+            when(event!!.action and MotionEvent.ACTION_MASK) {
+                MotionEvent.ACTION_DOWN ->{
+                    return true
+                }
+                MotionEvent.ACTION_UP ->{
+                    return true
                 }
             }
 
 
+            return super.onTouchEvent(event)
+
         }
 
 
+    }
 
+    override fun onResume() {
+        super.onResume()
+        breakoutView.resume()
+    }
 
-
-
+    override fun onPause() {
+        super.onPause()
+        breakoutView.pause()
     }
 }
 
