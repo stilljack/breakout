@@ -3,6 +3,7 @@ package com.saucefan.stuff.breakout.ui.main
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Point
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.util.Log
@@ -42,15 +43,19 @@ class BreakoutFragment : Fragment() {
                   val paint = Paint()
                   var fps = 0L
         private   var timeThisFrame=0L
+                  var startFrameTime = System.currentTimeMillis()
+                  var size =Point()
+                  var display =getDisplay().getSize(size)
+                  var screenX=size.x
+                  var screenY =size.y
 
 
 
 
 
-        override fun run() {
+       override fun run() {
             while (playing) {
                 //current time in milli
-                var startFrameTime = System.currentTimeMillis()
 
                 if (!paused) {
                     update()
